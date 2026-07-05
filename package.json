@@ -1,0 +1,9 @@
+{
+  "name": "multi_app",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "devDependencies": {
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:"
+  }
+}
