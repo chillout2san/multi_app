@@ -18,6 +18,9 @@ multi_app/
 ├── .claude/
 │   └── skills -> ../.agents/skills   # シンボリックリンク（Claude Code にスキルを認識させるため）
 │
+├── .github/
+│   └── PULL_REQUEST_TEMPLATE.md # PR テンプレート（Summary / TestPlan の構成）
+│
 ├── apps/                        # デプロイ単位（プロダクトごと）
 │   ├── product-a/
 │   │   ├── web/                 # Next.js 16 フロントエンド（TypeScript / App Router / src dir / Tailwind / Turbopack）

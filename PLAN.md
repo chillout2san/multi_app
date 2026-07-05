@@ -124,6 +124,8 @@ mise exec -- pnpm create next-app@latest apps/product-a/web \
 15. スキル `.agents/skills/answer-directory-structure/SKILL.md` を作成: 呼び出すと現状のディレクトリ構成を説明する。目指す全体像を別ドキュメント（docs/directory.md 案）に転記する代わりにスキル化した。「ディレクトリ構成を変更したら必ずスキルも更新する」というメンテナンスルールを description に明記
 16. `.claude/skills` → `../.agents/skills` の相対シンボリックリンクを作成（Claude Code にスキルを認識させるため。実体は `.agents/skills/` に一元管理し、他の AI エージェントとも共有できる）。スキルが認識されることを確認済み
 17. `apps/product-b/` を作成（.gitkeep のみ）
+18. PR #1 のタイトル・概要をブランチ全体の内容（コミット 4 つ・30 ファイル）に合わせて更新
+19. `.github/PULL_REQUEST_TEMPLATE.md` を作成（write-pr スキルの references/template.md と同構成。Web UI からの PR 作成時にも同じフォーマットが適用される。Claude Code フッターのみリポジトリ用に除外）
 
 ## 6. 次のステップ
 
