@@ -67,7 +67,7 @@ multi_app/
 - ルートの `package.json` は `private: true` のオーケストレーション用。各パッケージ（`apps/*/web`, `packages/*`）が自分の `package.json` を持つ
 - ロックファイルはルートの `pnpm-lock.yaml` に一元化
 - **catalog 機能を採用**: 依存バージョンは `pnpm-workspace.yaml` の `catalog:` に一元定義し、各 package.json は `"catalog:"` で参照する。複数パッケージ間でバージョンが自動的に揃う
-- バージョン指定の方針: next / react / react-dom は完全指定（組み合わせの整合性が重要なため）、typescript / @types/* などツール系は `^` レンジ
+- バージョン指定の方針: next / react / react-dom は完全指定（組み合わせの整合性が重要なため）、typescript / @types/\* などツール系は `^` レンジ
 - `@types/node` は create-next-app 生成時の `^20` から、mise の node 24 に合わせて `^24` に変更した
 - `allowBuilds`: pnpm 11 の形式で `sharp: false` / `unrs-resolver: false`（ビルド済みバイナリが配布されるためスクリプト実行不要）。create-next-app が生成した旧形式 `ignoredBuiltDependencies` は pnpm 11 では効かなかったため置き換えた
 
