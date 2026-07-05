@@ -120,6 +120,10 @@ mise exec -- pnpm create next-app@latest apps/product-a/web \
 11. `sortImports` / `sortTailwindcss` を有効化し、リポジトリ全体に `pnpm format` を適用（4 ファイル整形）
 12. `typecheck` scripts を追加（web: `next typegen && tsc --noEmit`、ルート: `pnpm -r typecheck`）。実行して型エラーなしを確認
 13. tsconfig の共通化: ルートに `tsconfig.base.json`（共通 compilerOptions）を作成し、web の `tsconfig.json` は `extends` + アプリ固有設定（next plugin / paths / include）のみの薄いファイルに変更。`tsconfig.json` という名前をルートに置くとエディタが誤適用しうるため base という名前にした。`include` / `exclude` の相対パスは宣言したファイル基準で解決されるためアプリ側に残す
+14. ルートの README.md を削除（README は書かない方針に変更）
+15. スキル `.agents/skills/answer-directory-structure/SKILL.md` を作成: 呼び出すと現状のディレクトリ構成を説明する。目指す全体像を別ドキュメント（docs/directory.md 案）に転記する代わりにスキル化した。「ディレクトリ構成を変更したら必ずスキルも更新する」というメンテナンスルールを description に明記
+16. `.claude/skills` → `../.agents/skills` の相対シンボリックリンクを作成（Claude Code にスキルを認識させるため。実体は `.agents/skills/` に一元管理し、他の AI エージェントとも共有できる）。スキルが認識されることを確認済み
+17. `apps/product-b/` を作成（.gitkeep のみ）
 
 ## 6. 次のステップ
 
