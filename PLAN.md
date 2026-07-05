@@ -1,6 +1,6 @@
 # PLAN.md — multi_app 作業メモ
 
-ここまでの議論・決定事項・作業ログを網羅的に記録するメモ。README.md はリポジトリの「現在の姿」を示すのに対し、このファイルは「経緯と判断理由」を残す。
+ここまでの議論・決定事項・作業ログを網羅的に記録するメモ（「経緯と判断理由」を残す）。README.md は置かない方針。ディレクトリ構成の説明は `.agents/skills/answer-directory-structure/SKILL.md` が持ち、構成を変更したらスキルも更新する。
 
 ## 1. リポジトリの目的
 
@@ -74,11 +74,20 @@ multi_app/
 ### Next.js（決定・導入済み）
 
 - Turbopack を使う（Next.js 16 では標準）
-- lint / format は ESLint / Prettier ではなく **oxlint / oxfmt** を使う（未導入・次のステップ）
+- lint / format は ESLint / Prettier ではなく **oxlint / oxfmt** を使う（導入済み、詳細は次節）
   - oxlint: 安定版。Next.js 専用ルール（`plugins: ["nextjs"]`）を組み込みサポート
   - oxfmt: ベータ（v0.5x）だが Prettier の JS/TS 準拠テスト 100% パス。練習用途ではリスクなしと判断
   - Turbopack はバンドラ、oxlint / oxfmt は静的解析・整形でレイヤーが独立しており競合しない
   - `next lint` は Next.js 16 で削除済みのため、linter は自由に選べる
+
+### oxlint / oxfmt（決定・導入済み）
+
+- oxlint 1.72.0 / oxfmt 0.57.0 を**ルートの devDependencies** に導入（catalog 管理）。lint / format は「リポジトリ全体の関心事」なのでルート一元管理・ルートから実行する方針。各パッケージには置かない（pnpm の厳格な依存管理により、web/ のパッケージスクリプトからは呼べない点に注意）
+- `.oxlintrc.json`: plugins は `typescript` / `react` / `nextjs` / `unicorn` / `oxc`。categories は `correctness: error` + `suspicious: warn`。`react/react-in-jsx-scope` は React 17+ の新 JSX トランスフォームでは不要な古いルールのため off。`.next/` は除外
+- `.oxfmtrc.json`: `printWidth: 100`（デフォルトと同値だが明示）、`sortImports: true`（import 文の自動並び替え）、`sortTailwindcss: true`（Tailwind クラスの自動並び替え、prettier-plugin-tailwindcss 相当）。`.next/` と `pnpm-lock.yaml` は除外。その他は Prettier 互換デフォルト
+- 設定ファイルは「デフォルトから変えた意図のあるものだけ書く」最小構成の方針
+- ルート scripts: `lint`（oxlint）/ `format`（oxfmt . 書き換えあり）/ `format:check`（CI 用・検査のみ、ズレがあれば終了コード 1）
+- typecheck: web 側に `typecheck: next typegen && tsc --noEmit`（Next.js 16 はルート型生成 `next typegen` を先に実行するのが正しい）、ルートに `typecheck: pnpm -r typecheck`（workspace 全体を再帰実行）。oxlint は型チェックの代替にはならない
 
 ### create-next-app の実行内容（実施済み）
 
@@ -106,16 +115,20 @@ mise exec -- pnpm create next-app@latest apps/product-a/web \
 6. catalog 化、`@types/node` を `^24` へ
 7. `pnpm install` 成功。workspace 2 プロジェクト（ルート + @product-a/web)認識、ロックファイルはルートのみ
 8. dev サーバ起動確認（Next.js 16.2.10 / Turbopack、Ready in 192ms、ブラウザで表示確認済み)
+9. ブランチ構成の修正: 空コミットのみの `main` を作成し、`feat/init-apps-web` をその上に rebase → force push → デフォルトブランチを `main` に変更 → PR #1 を作成（https://github.com/chillout2san/multi_app/pull/1）
+10. oxlint / oxfmt をルート devDependencies に導入（catalog 管理）、`.oxlintrc.json` / `.oxfmtrc.json` 作成、`lint` / `format` / `format:check` scripts 整備
+11. `sortImports` / `sortTailwindcss` を有効化し、リポジトリ全体に `pnpm format` を適用（4 ファイル整形）
+12. `typecheck` scripts を追加（web: `next typegen && tsc --noEmit`、ルート: `pnpm -r typecheck`）。実行して型エラーなしを確認
+13. tsconfig の共通化: ルートに `tsconfig.base.json`（共通 compilerOptions）を作成し、web の `tsconfig.json` は `extends` + アプリ固有設定（next plugin / paths / include）のみの薄いファイルに変更。`tsconfig.json` という名前をルートに置くとエディタが誤適用しうるため base という名前にした。`include` / `exclude` の相対パスは宣言したファイル基準で解決されるためアプリ側に残す
 
 ## 6. 次のステップ
 
-- [ ] `apps/product-a/web` に oxlint / oxfmt を導入
-  - devDependencies はルートの package.json に置く想定
-  - `.oxlintrc.json` に `plugins: ["nextjs"]` を設定
-  - `lint` / `format` scripts の整備
+- [x] `apps/product-a/web` に oxlint / oxfmt を導入（作業ログ 10〜12 参照）
+- [ ] CI（GitHub Actions）の整備: PR ごとに `pnpm lint` / `pnpm format:check` / `pnpm typecheck` / `next build` を実行。CI がないと format:check などの「弾く」系の守りが機能しない
 - [ ] `apps/product-a/api` の Go モジュール初期化
   - モジュールパスは `github.com/chillout2san/multi_app/apps/product-a/api` のような形を想定（要確認）
   - `go.work` の設置（マルチモジュール + go workspace 方式）
+- [ ] main ブランチの Ruleset 設定（Require a pull request / Block force pushes / Restrict deletions）
 - [ ] その後の候補: Makefile（または mise tasks）整備、docker compose での起動、product-b の追加、`services/` / `packages/` / `proto/` の整備
 
 ## 7. 学んだこと・議論したことのメモ
@@ -125,3 +138,8 @@ mise exec -- pnpm create next-app@latest apps/product-a/web \
 - **semver レンジ**: `16.2.10` はピン留め、`^4` はメジャーを跨がない範囲で許容。実際に入るバージョンは `pnpm-lock.yaml` が確定させる。レンジ内で上がるのは `pnpm update` 実行時のみ
 - **pnpm のビルドスクリプト制御**: pnpm v10+ は依存のライフサイクルスクリプトをデフォルト実行しない（サプライチェーン攻撃対策）。pnpm 11 では `allowBuilds` でパッケージごとに true / false を明示する
 - **AGENTS.md / CLAUDE.md**: 最近の create-next-app が生成する AI エージェント向け指示ファイル。「Next.js 16 は学習データより新しい可能性があるので `node_modules/next/dist/docs/` を読め」という内容。残しておく
+- **GitHub の PR には共通祖先が必要**: 履歴が完全に別のブランチ同士では PR を作れない。「空の main への PR」は、空コミットを作って feature ブランチをその上に rebase することで実現した
+- **デフォルトブランチ**: 最初に push されたブランチが自動でデフォルトになる。変更できるのはリポジトリの Admin のみ。個人リポジトリではコラボレーターは常に Write 相当で、設定変更（デフォルトブランチ・Ruleset など）は Owner にしかできない
+- **GitHub Ruleset**: main 保護の基本は Require a pull request / Block force pushes / Restrict deletions。Restrict creations は `release/*` などパターン対象で生きる機能で、既存の main 保護には実質関係ない
+- **oxlint / oxfmt はパス自動検知**: 引数なし（または `.`）でカレント以下の対応拡張子ファイルを再帰的に走査する。`.gitignore` を尊重し、`ignorePatterns` で追加除外できる。ファイルリストのメンテは不要
+- **printWidth**: 1 行の最大幅の目標値。oxfmt のデフォルトは 100（Prettier は 80）。収まる行はまとめ、超える行は折り返される
